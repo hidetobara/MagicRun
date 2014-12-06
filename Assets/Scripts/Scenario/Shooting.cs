@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.ComponentModel;
+using UnityEngine;
+
 
 namespace Scenario
 {
 	using Array = List<System.Object>;
 	using Hash = Dictionary<string, System.Object>;
+
+	public enum PositionType { ABSOLUTE, RELATIVE }
 
 	public class ShootingGame : Unit
 	{
@@ -28,7 +32,7 @@ namespace Scenario
 		public override Unit Parse(System.Object o)
 		{
 			Hash h = o as Hash;
-			if (h == null && !h.ContainsKey(CLASS_KEY) && h[CLASS_KEY].ToString() != NAME) return null;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 
 			ShootingGame i = new ShootingGame();
 			i.Title = RetrieveString(h, TITEL_KEY);
@@ -56,9 +60,9 @@ namespace Scenario
 		public override Unit Parse(System.Object o)
 		{
 			Hash h = o as Hash;
-			if (h == null && !h.ContainsKey(CLASS_KEY) && h[CLASS_KEY].ToString() != NAME) return null;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 			
-			Stage i = new Stage();
+			var i = new Stage();
 			i.Number = RetrieveInt(h, NUMBER_KEY);
 			i.Units = RetrieveUnits(h, UNITS_KEY, Timeline.Instance);
 			return i;
@@ -84,9 +88,9 @@ namespace Scenario
 		public override Unit Parse(System.Object o)
 		{
 			Hash h = o as Hash;
-			if (h == null && !h.ContainsKey(CLASS_KEY) && h[CLASS_KEY].ToString() != NAME) return null;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 
-			Timeline i = new Timeline();
+			var i = new Timeline();
 			i.Second = RetrieveFloat(h, SECOND_KEY);
 			i.Units = RetrieveUnits(h, UNITS_KEY, Enemy.Instance);
 			return i;
@@ -107,24 +111,122 @@ namespace Scenario
 
 		const string NAME = "Enemy";
 		const string BREED_KEY = "Breed";
+		const string LABEL_KEY = "Label";
+		const string REFERENCE_KEY = "Reference";
 		public string Breed { set; get; }
+		public string Label { set; get; }
+		public string Reference { set; get; }
 
 		public override Unit Parse(System.Object o)
 		{
 			Hash h = o as Hash;
-			if (h == null && !h.ContainsKey(CLASS_KEY) && h[CLASS_KEY].ToString() != NAME) return null;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 
-			Enemy i = new Enemy();
+			var i = new Enemy();
 			i.Breed = RetrieveString(h, BREED_KEY);
+			i.Label = RetrieveString(h, LABEL_KEY);
+			i.Reference = RetrieveString(h, REFERENCE_KEY);
+			i.Units = RetrieveUnits(h, UNITS_KEY, ActMove.Instance, ActFire.Instance);
 			return i;
 		}
 
 		public override System.Object ToHash()
 		{
 			Hash h = new Hash() { { CLASS_KEY, NAME }, { BREED_KEY, Breed } };
+			if (!string.IsNullOrEmpty(Label)) h[LABEL_KEY] = Label;
+			if (!string.IsNullOrEmpty(Reference)) h[REFERENCE_KEY] = Reference;
 			h[UNITS_KEY] = Units2Hash();
 			return h;
 		}
 		public override string ToString() { return "[" + NAME + ":" + Breed + "]"; }
+	}
+
+	public class Act : Unit
+	{
+		protected const string START_KEY = "Start";
+		protected const string END_KEY = "End";
+
+		[Category("Time")]
+		public float Start { set; get; }
+		[Category("Time")]
+		public float End { set; get; }
+
+		protected void RetrieveStartEnd(Hash h)
+		{
+			this.Start = RetrieveFloat(h, START_KEY);
+			this.End = RetrieveFloat(h, END_KEY);
+		}
+
+		protected void InsertStartEnd(Hash h)
+		{
+			h[START_KEY] = this.Start;
+			h[END_KEY] = this.End;
+		}
+	}
+
+	public class ActMove : Act
+	{
+		public static readonly ActMove Instance = new ActMove();
+
+		const string NAME = "Move";
+		const string TYPE_KEY = "Type";
+		const string MOVE_KEY = "Move";
+		public PositionType Type { set; get; }
+		public float[] _Move { set; get; }
+		public Vector3 Move { get { return new Vector3(_Move[0], _Move[1], _Move[2]); } }
+
+		public ActMove()
+		{
+			_Move = new float[3];
+		}
+
+		public override Unit Parse(System.Object o)
+		{
+			Hash h = o as Hash;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
+
+			var i = new ActMove();
+			i.Type = RetrieveEnum<PositionType>(h, TYPE_KEY);
+			i._Move = RetrieveFloat3(h, MOVE_KEY);
+			i.RetrieveStartEnd(h);
+			return i;
+		}
+
+		public override System.Object ToHash()
+		{
+			Hash h = new Hash() { { CLASS_KEY, NAME }, { TYPE_KEY, Type.ToString() } };
+			h[MOVE_KEY] = Floats2Hash(_Move);
+			InsertStartEnd(h);
+			return h;
+		}
+		public override string ToString() { return "[" + NAME + ":" + Move + "]"; }
+	}
+
+	public class ActFire : Act
+	{
+		public static readonly ActFire Instance = new ActFire();
+
+		const string NAME = "Fire";
+		const string WEAPON_KEY = "Weapon";
+		public string Weapon { set; get; }
+
+		public override Unit Parse(System.Object o)
+		{
+			Hash h = o as Hash;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
+
+			var i = new ActFire();
+			i.Weapon = RetrieveString(h, WEAPON_KEY);
+			i.RetrieveStartEnd(h);
+			return i;
+		}
+
+		public override System.Object ToHash()
+		{
+			Hash h = new Hash() { { CLASS_KEY, NAME }, { WEAPON_KEY, Weapon } };
+			InsertStartEnd(h);
+			return h;
+		}
+		public override string ToString() { return "[" + NAME + ":" + Weapon + "]"; }
 	}
 }

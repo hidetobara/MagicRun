@@ -147,7 +147,7 @@ namespace Chunker
 			return i;
 		}
 
-		public void AddBytes(string filename, byte[] bytes)
+		public Resource AddBytes(string filename, byte[] bytes)
 		{
 			Resource r = new Resource();
 			r.Name = filename;
@@ -161,8 +161,9 @@ namespace Chunker
 					break;
 			}
 			Table[r.Name] = r;
+			return r;
 		}
-		public string AddFile(string path)
+		public Resource AddFile(string path)
 		{
 			if (!File.Exists(path)) return null;
 
@@ -171,20 +172,27 @@ namespace Chunker
 			byte[] bytes = new byte[s.Length];
 			s.Read(bytes, 0, bytes.Length);
 			s.Close();
-			AddBytes(filename, bytes);
-			return filename;
+			Resource r = AddBytes(filename, bytes);
+			return r;
 		}
-		public void AddObject(string name, Object o)
+		public Resource AddObject(string name, Object o)
 		{
 			Resource r = new Resource();
 			r.Name = name;
 			r.Body = o;
 			Table[r.Name] = r;
+			return r;
 		}
+
 		public Resource Get(string name)
 		{
 			if (!Table.ContainsKey(name)) return null;
 			return Table[name];
+		}
+
+		public void Remove(string name)
+		{
+			Table.Remove(name);
 		}
 	}
 

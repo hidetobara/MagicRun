@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 
 namespace Scenario
@@ -48,13 +49,50 @@ namespace Scenario
 			return hash[name] as string;
 		}
 
+		protected System.Object Floats2Hash(float[] floats)
+		{
+			if (floats == null) return null;
+			if (floats.Length == 3) return floats[0] + "," + floats[1] + "," + floats[2];
+			return null;
+		}
+		protected static float[] RetrieveFloat3(Dictionary<string, System.Object> hash, string name)
+		{
+			float[] floats = new float[3];
+			if (!hash.ContainsKey(name)) return floats;
+			string s = hash[name].ToString();
+			if (string.IsNullOrEmpty(s)) return floats;
+
+			try
+			{
+				string[] cells = s.Split(',');
+				for (int i = 0; i < cells.Length && i < floats.Length; i++) floats[i] = float.Parse(cells[i]);
+			}
+			catch
+			{
+				return floats;
+			}
+			return floats;
+		}
+
+		protected static T RetrieveEnum<T>(Dictionary<string, System.Object> hash, string name)
+		{
+			if (!hash.ContainsKey(name)) return default(T);
+			string s = hash[name].ToString();
+			if(string.IsNullOrEmpty(s)) return default(T);
+
+			foreach(var t in Enum.GetValues(typeof(T)))
+			{
+				if (s == t.ToString()) return (T)t;
+			}
+			return default(T);
+		}
+
 		protected List<System.Object> Units2Hash()
 		{
 			List<System.Object> list = new List<System.Object>();
 			foreach (var u in Units) { var o = u.ToHash(); if (o != null) list.Add(o); }
 			return list;
 		}
-
 		protected List<Unit> RetrieveUnits(Dictionary<string, System.Object> hash, string name, params Unit[] instances)
 		{
 			List<Unit> units = new List<Unit>();

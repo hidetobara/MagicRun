@@ -43,29 +43,23 @@ namespace ChunkerManager
 		}
 		#endregion
 
-		const string INDEX_DOCUMENT = "index.json";
+		ShootingPlayer _Player;
 
-		ShootingGame _Document;
-		Chunk _Resources;
 		TreeNode _DocumentNode { get { return TreeViewMain.Nodes[0]; } set { TreeViewMain.Nodes[0] = value; } }
 		TreeNode _ResourceNode { get { return TreeViewMain.Nodes[1]; } set { TreeViewMain.Nodes[1] = value; } }
 		private void Reset()
 		{
-			_Document = new ShootingGame();
-			_Resources = new Chunk();
+			_Player = new ShootingPlayer();
 
 			TreeViewMain.Nodes.Clear();
-			TreeViewMain.Nodes.Add(new UnitNode("Document", _Document));
-			TreeViewMain.Nodes.Add(new ChunkNode("Resources", _Resources));
+			TreeViewMain.Nodes.Add(new UnitNode("Document", _Player.DocumentBox));
+			TreeViewMain.Nodes.Add(new ChunkNode("Resources", _Player.ResourceBox));
 		}
 
 		private void ToolStripMenuItemSave_Click(object sender, EventArgs e)
 		{
 			if (SaveFileDialogMain.ShowDialog() != DialogResult.OK) return;
-
-			Chunk c = new Chunk();
-			c.AddObject(INDEX_DOCUMENT, _Document.ToHash());
-			Chunk.Save(SaveFileDialogMain.FileName, Chunk.Merge(c, _Resources));
+			_Player.Save(SaveFileDialogMain.FileName);
 		}
 
 		private void ToolStripMenuItemLoad_Click(object sender, EventArgs e)
@@ -73,18 +67,15 @@ namespace ChunkerManager
 			if (OpenFileDialogMain.ShowDialog() != DialogResult.OK) return;
 
 			Reset();
+			if (!_Player.Load(OpenFileDialogMain.FileName)) return;
 
-			Chunk c = Chunk.Load(OpenFileDialogMain.FileName);
-			Chunk d = c.Cutout(INDEX_DOCUMENT);
-			foreach (var pair in c.Table)
+			foreach (var pair in _Player.ResourceBox.Table)
 			{
 				ResourceNode n = new ResourceNode(pair.Key, pair.Value);
 				_ResourceNode.Nodes.Add(n);
 			}
-			Resource r = d.Get(INDEX_DOCUMENT);
-			_Document = ShootingGame.Instance.Parse(r.Body) as ShootingGame;
-			(_DocumentNode as UnitNode).Target = _Document;
-			BuildTreeUnits(_DocumentNode as UnitNode, _Document);
+			(_DocumentNode as UnitNode).Target = _Player.DocumentBox;
+			BuildTreeUnits(_DocumentNode as UnitNode, _Player.DocumentBox);
 		}
 
 		private void TreeViewMain_AfterSelect(object sender, TreeViewEventArgs e)
@@ -125,7 +116,7 @@ namespace ChunkerManager
 			ResourceNode r = TreeViewMain.SelectedNode as ResourceNode;
 			if (r != null)
 			{
-				_Resources.Table.Remove(r.Key);
+				_Player.ResourceBox.Remove(r.Key);
 				TreeViewMain.Nodes.Remove(r);
 			}
 		}
@@ -139,10 +130,9 @@ namespace ChunkerManager
 		{
 			if (OpenFileDialogNode.ShowDialog() != DialogResult.OK) return;
 
-			string key = _Resources.AddFile(OpenFileDialogNode.FileName);
-			if (key == null) return;
-			Resource value = _Resources.Table[key];
-			_ResourceNode.Nodes.Add(new ResourceNode(key, value));
+			Resource r = _Player.ResourceBox.AddFile(OpenFileDialogNode.FileName);
+			if (r == null) return;
+			_ResourceNode.Nodes.Add(new ResourceNode(r.Name, r));
 		}
 
 		private void ToolStripMenuItemAddUnit_Click(object sender, EventArgs e)
@@ -153,6 +143,8 @@ namespace ChunkerManager
 				if (n.Target is ShootingGame && sender == ToolStripMenuItemAddStage) { AddTreeUnit(n, new Stage()); }
 				if (n.Target is Stage && sender == ToolStripMenuItemAddTimeline) { AddTreeUnit(n, new Timeline()); }
 				if (n.Target is Timeline && sender == ToolStripMenuItemAddEnemy) { AddTreeUnit(n, new Enemy()); }
+				if (n.Target is Enemy && sender == ToolStripMenuItemAddMove) { AddTreeUnit(n, new ActMove()); }
+				if (n.Target is Enemy && sender == ToolStripMenuItemAddFire) { AddTreeUnit(n, new ActFire()); }
 			}
 		}
 
