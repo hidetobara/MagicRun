@@ -82,8 +82,8 @@ namespace Scenario
 		public static readonly Timeline Instance = new Timeline();
 
 		const string NAME = "Timeline";
-		const string SECOND_KEY = "Second";
-		public float Second { set; get; }
+		const string SECOND_KEY = "Time";
+		public float Time { set; get; }
 
 		public override Unit Parse(System.Object o)
 		{
@@ -91,18 +91,18 @@ namespace Scenario
 			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 
 			var i = new Timeline();
-			i.Second = RetrieveFloat(h, SECOND_KEY);
+			i.Time = RetrieveFloat(h, SECOND_KEY);
 			i.Units = RetrieveUnits(h, UNITS_KEY, Enemy.Instance);
 			return i;
 		}
 
 		public override System.Object ToHash()
 		{
-			Hash h = new Hash() { { CLASS_KEY, NAME }, { SECOND_KEY, Second } };
+			Hash h = new Hash() { { CLASS_KEY, NAME }, { SECOND_KEY, Time } };
 			h[UNITS_KEY] = Units2Hash();
 			return h;
 		}
-		public override string ToString() { return "[" + NAME + ":" + Second + "]"; }
+		public override string ToString() { return "[" + NAME + ":" + Time + "]"; }
 	}
 
 	public class Enemy : Unit
@@ -116,6 +116,13 @@ namespace Scenario
 		public string Breed { set; get; }
 		public string Label { set; get; }
 		public string Reference { set; get; }
+
+		public Enemy() { }
+		public Enemy(Vector3 p)
+		{
+			ActMove m = new ActMove(p);
+			Add(m);
+		}
 
 		public override Unit Parse(System.Object o)
 		{
@@ -173,11 +180,22 @@ namespace Scenario
 		const string MOVE_KEY = "Move";
 		public PositionType Type { set; get; }
 		public float[] _Move { set; get; }
-		public Vector3 Move { get { return new Vector3(_Move[0], _Move[1], _Move[2]); } }
+		public Vector3 Move
+		{
+			set { _Move[0] = value.x; _Move[1] = value.y; _Move[2] = value.z; }
+			get { return new Vector3(_Move[0], _Move[1], _Move[2]); }
+		}
+
+		public bool IsFirst() { return Start == 0 && End == 0 && Type == PositionType.ABSOLUTE; }
 
 		public ActMove()
 		{
 			_Move = new float[3];
+		}
+		public ActMove(Vector3 p) : this()
+		{
+			_Move[0] = p.x; _Move[1] = p.y; _Move[2] = p.z;
+			Type = PositionType.ABSOLUTE;
 		}
 
 		public override Unit Parse(System.Object o)

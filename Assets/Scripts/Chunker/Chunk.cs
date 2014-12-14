@@ -21,12 +21,12 @@ namespace Chunker
 			return i;
 		}
 
-		public static bool Save(string path, Chunk c)
+		public bool Save(string path)
 		{
 			BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create));
 			writer.Write(StringToBytes(HEADER));
 
-			foreach (var pair in c.Table.Values)
+			foreach (var pair in this.Table.Values)
 			{
 				Write(writer, pair.Name);
 
@@ -54,7 +54,7 @@ namespace Chunker
 		private static byte[] StringToBytes(string s) { return Encoding.UTF8.GetBytes(s); }
 		private static string BytesToString(byte[] bs) { return Encoding.UTF8.GetString(bs); }
 
-		private static void Write(BinaryWriter w, string v)
+		private void Write(BinaryWriter w, string v)
 		{
 			if (string.IsNullOrEmpty(v))
 			{
@@ -65,7 +65,7 @@ namespace Chunker
 			w.Write(bytes.Length);
 			w.Write(bytes);
 		}
-		private static void Write(BinaryWriter w, byte[] bs)
+		private void Write(BinaryWriter w, byte[] bs)
 		{
 			if(bs == null || bs.Length == 0)
 			{
@@ -76,15 +76,42 @@ namespace Chunker
 			w.Write(bs);
 		}
 
+		public static Chunk Load(byte[] bytes)
+		{
+			if (bytes == null || bytes.Length == 0) return null;
+
+			try
+			{
+				return Load(new BinaryReader(new MemoryStream(bytes)));
+			}
+			catch(Exception ex)
+			{
+				return null;
+			}
+		}
+
 		public static Chunk Load(string path)
 		{
 			if (!File.Exists(path)) return null;
 
-			BinaryReader reader = null;
+			try
+			{
+				using (FileStream s = File.OpenRead(path))
+				{
+					return Load(new BinaryReader(s));
+				}
+			}
+			catch(Exception ex)
+			{
+				return null;
+			}
+		}
+
+		private static Chunk Load(BinaryReader reader)
+		{
 			Chunk c = new Chunk();
 			try
 			{
-				reader = new BinaryReader(File.Open(path, FileMode.Open));
 				byte[] bytes = reader.ReadBytes(4);
 				string header = Encoding.UTF8.GetString(bytes);
 				if (header != HEADER) return null;
@@ -108,10 +135,6 @@ namespace Chunker
 			}
 			catch (Exception ex)
 			{
-			}
-			finally
-			{
-				if (reader != null) reader.Close();
 			}
 			return c;
 		}
