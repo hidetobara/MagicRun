@@ -3,14 +3,26 @@ using System.Collections;
 
 public class MyHandler : MonoBehaviour
 {
+	private static MyHandler _Instance;
+	public static MyHandler Singleton()
+	{
+		if (_Instance == null) _Instance = FindObjectOfType<MyHandler>();
+		return _Instance;
+	}
+
 	private PowerHandler _Power;
 	private FingerStatus _Finger;
 
-	public GameObject BallPanel;
-    public GameObject Ball;
+	public GameObject EnemyPanel;
+	public GameObject FriendPanel;
+
+	public Vector3 Position { get { return transform.parent.transform.localPosition; } }
 
     void Start()
     {
+		Singleton();
+//		gameObject.layer = Define.FRIEND_LAYER;
+
 		_Finger = new FingerStatus();
 		_Power = new PowerHandler(this.gameObject);
 		_Power.PowerColor = new Color(1.0f, 0.5f, 0.5f);
@@ -41,10 +53,10 @@ public class MyHandler : MonoBehaviour
 		{
 			if (_Finger.IsChargedStand)
 			{
-				GameObject go = Instantiate(Resources.Load("FirePrefab")) as GameObject;
+				GameObject go = Define.InstantiateFire();
 				FireHandler h = go.GetComponent<FireHandler>();
 				h.Life = 20;
-				AdjustGameObject(go, Vector3.zero);
+				AdjustGameObjectForEnemy(go, Position);
 			}
 			_Finger.Clear();
 			_Power.Stop();
@@ -61,18 +73,26 @@ public class MyHandler : MonoBehaviour
     {
         while(true)
         {
-            GameObject go = Instantiate(Ball) as GameObject;
-			AdjustGameObject(go, Vector3.zero);
+            GameObject go = Define.InstantiateBall();
+			go.layer = Define.FRIEND_FIRE_LAYER;
+			AdjustGameObjectForEnemy(go, Position);
             go.rigidbody2D.velocity = new Vector2(0, 1);
             yield return new WaitForSeconds(sec);
         }
     }
 
-	private void AdjustGameObject(GameObject go, Vector3 p)
+	public void AdjustGameObjectForFriend(GameObject go, Vector3 p)
 	{
-		go.transform.parent = BallPanel.transform;
+		go.transform.parent = FriendPanel.transform;
 		go.transform.localScale = Vector3.one;
-		go.transform.localPosition = this.transform.localPosition + p;
+		go.transform.localPosition = p;
+	}
+
+	public void AdjustGameObjectForEnemy(GameObject go, Vector3 p)
+	{
+		go.transform.parent = EnemyPanel.transform;
+		go.transform.localScale = Vector3.one;
+		go.transform.localPosition = p;
 	}
 
 	class PowerHandler

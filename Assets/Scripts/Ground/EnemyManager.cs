@@ -14,7 +14,7 @@ public class EnemyManager : MonoBehaviour
 
 	private float _Time = 0;
 
-	public GameObject CharacterLayer;
+	public GameObject EnemyPanel;
 	public string DocumentName = "game";
 
 	void Start()
@@ -51,7 +51,7 @@ public class EnemyManager : MonoBehaviour
 	{
 		GameObject go = Instantiate(Resources.Load("DevilPrefab")) as GameObject;
 		BaseEnemy b = go.GetComponent<BaseEnemy>();
-		go.transform.parent = CharacterLayer.transform;
+		go.transform.parent = EnemyPanel.transform;
 		b.Birth(this, e);
 		Register(b);
 	}

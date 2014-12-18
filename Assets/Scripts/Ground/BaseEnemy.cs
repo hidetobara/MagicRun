@@ -13,6 +13,7 @@ public class BaseEnemy : MonoBehaviour
 	protected Enemy _Emeny;
 	public Enemy Enemey { get { return _Emeny; } }
 
+	public Vector3 Position { get { return transform.localPosition; } }
 	public Vector3 FirstPosition
 	{
 		set
@@ -33,6 +34,7 @@ public class BaseEnemy : MonoBehaviour
 		_Emeny = e;
 		_Sprite = GetComponent<UI2DSprite>();
 
+		gameObject.layer = Define.ENEMY_LAYER;
 		transform.localScale = Vector3.one;
 		transform.localPosition = FirstPosition;
 	}
