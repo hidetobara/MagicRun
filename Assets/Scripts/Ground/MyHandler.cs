@@ -10,8 +10,8 @@ public class MyHandler : MonoBehaviour
 		return _Instance;
 	}
 
-	private PowerHandler _Power;
 	private FingerStatus _Finger;
+	private LifeManager _Life;
 
 	public GameObject EnemyPanel;
 	public GameObject FriendPanel;
@@ -24,9 +24,7 @@ public class MyHandler : MonoBehaviour
 //		gameObject.layer = Define.FRIEND_LAYER;
 
 		_Finger = new FingerStatus();
-		_Power = new PowerHandler(this.gameObject);
-		_Power.PowerColor = new Color(1.0f, 0.5f, 0.5f);
-		_Power.Stop();
+		_Life = LifeManager.Singleton();
 
 		StartCoroutine(Firing(1.0f));
     }
@@ -36,7 +34,6 @@ public class MyHandler : MonoBehaviour
 		if (_Finger.IsPressed)
 		{
 			_Finger.Time += Time.deltaTime;
-			if (_Finger.IsChargedStand) _Power.Fire();
 		}
     }
 
@@ -47,7 +44,6 @@ public class MyHandler : MonoBehaviour
 		if(press)
 		{
 			_Finger.Press();
-			_Power.Load();
 		}
 		else
 		{
@@ -59,14 +55,12 @@ public class MyHandler : MonoBehaviour
 				AdjustGameObjectForEnemy(go, Position);
 			}
 			_Finger.Clear();
-			_Power.Stop();
 		}
 	}
 
 	void OnDrag(Vector2 delta)
 	{
 		_Finger.Move += delta;
-		if (_Finger.IsMoving) _Power.Stop();
 	}
 
     IEnumerator Firing(float sec)
@@ -74,7 +68,7 @@ public class MyHandler : MonoBehaviour
         while(true)
         {
             GameObject go = Define.InstantiateBall();
-			go.layer = Define.FRIEND_FIRE_LAYER;
+			go.layer = Define.ENEMY_FIRE_LAYER;
 			AdjustGameObjectForEnemy(go, Position);
             go.rigidbody2D.velocity = new Vector2(0, 1);
             yield return new WaitForSeconds(sec);
@@ -95,17 +89,18 @@ public class MyHandler : MonoBehaviour
 		go.transform.localPosition = p;
 	}
 
-	class PowerHandler
+	void OnCollisionEnter2D(Collision2D col)
 	{
-		ParticleSystem _Particle;
-		public PowerHandler(GameObject o)
+		GameObject go = col.gameObject;
+		BallHandler ball = go.GetComponent<BallHandler>();
+		if(go.layer == Define.FRIEND_FIRE_LAYER || go.layer == Define.FRIEND_LAYER)
 		{
-			_Particle = o.GetComponentInChildren<ParticleSystem>();
+			if(ball != null)
+			{
+				_Life.Damage(ball.Damage);
+				ball.DecomeDying(1.0f);
+			}
 		}
-		public Color PowerColor{ set { _Particle.startColor = value;} }
-		public void Stop() { _Particle.Stop(); _Particle.Clear(); }
-		public void Load() { _Particle.startSpeed = 0.2f; _Particle.startSize = 0.2f; if (!_Particle.isPlaying) _Particle.Play(); }
-		public void Fire() { _Particle.startSpeed = 0.5f; _Particle.startSize = 0.5f; if (!_Particle.isPlaying) _Particle.Play(); }
 	}
 
 	class FingerStatus

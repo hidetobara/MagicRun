@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class DevilHandler : BaseEnemy
+public class EnemyDevil : BaseEnemy
 {
 	void Start()
 	{

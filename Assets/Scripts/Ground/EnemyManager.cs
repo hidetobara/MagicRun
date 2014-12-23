@@ -42,7 +42,7 @@ public class EnemyManager : MonoBehaviour
 		{
 			Enemy e = u as Enemy;
 			if (e == null) continue;
-			print(_Time + ":" + e.Breed + "." + e.Label);
+			//print(_Time + ":" + e.Breed + "." + e.Label);
 			CreateEnemy(e);
 		}
 	}

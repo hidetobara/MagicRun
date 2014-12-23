@@ -36,9 +36,11 @@ class LifeManager : MonoBehaviour
 		for (int i = 0; _Hearts != null && i < _Hearts.Length; i++) DestroyImmediate(_Hearts[i].gameObject);
 
 		_Max = life;
+		if (_Current > _Max) _Current = _Max;
 		_Hearts = new UISprite[(int)life];
 		for (int i = 0; i < life; i++) _Hearts[i] = AddHeart(i);
 		Grid.Reposition();
+		UpdateHearts();
 	}
 
 	private UISprite AddHeart(int index)
@@ -60,6 +62,7 @@ class LifeManager : MonoBehaviour
 	{
 		_Current -= life;
 		UpdateHearts();
+		print("Life:" + _Current + "/" + _Max);
 	}
 
 	public void Heal(float life)
@@ -73,7 +76,7 @@ class LifeManager : MonoBehaviour
 	{
 		for (int i = 0; i < _Max; i++)
 		{
-			_Hearts[i].spriteName = i < _Current ? FULL_KEY : EMPTY_KEY;
+			_Hearts[i].spriteName = (i + 1.0f <= _Current) ? FULL_KEY : EMPTY_KEY;
 		}
 	}
 
