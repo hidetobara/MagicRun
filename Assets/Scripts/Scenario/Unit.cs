@@ -11,7 +11,9 @@ namespace Scenario
 		public const string CLASS_KEY = "Class";
 		public const string UNITS_KEY = "Units";
 
-		public List<Unit> Units = new List<Unit>();
+		public Unit Parent { get; private set; }
+		private List<Unit> _Units = new List<Unit>();
+		public List<Unit> Units { get { return _Units; } }
 
 		public virtual Unit Parse(System.Object o)
 		{
@@ -21,7 +23,7 @@ namespace Scenario
 		public virtual System.Object ToHash() { return null; }
 		public virtual string ToString() { return "[Unit]"; }
 
-		public void Add(Unit u) { if (u != null) Units.Add(u); }
+		public void Add(Unit u) { if (u == null) return; Units.Add(u); u.Parent = this; }
 
 		protected static int RetrieveInt(Dictionary<string, System.Object> hash, string name)
 		{
@@ -93,19 +95,29 @@ namespace Scenario
 			foreach (var u in Units) { var o = u.ToHash(); if (o != null) list.Add(o); }
 			return list;
 		}
-		protected List<Unit> RetrieveUnits(Dictionary<string, System.Object> hash, string name, params Unit[] instances)
+		protected void AssignUnits(Dictionary<string, System.Object> hash, string name, params Unit[] instances)
 		{
-			List<Unit> units = new List<Unit>();
+			this.Units.Clear();
 
-			if (!hash.ContainsKey(name) || hash[name] == null) return units;
+			if (!hash.ContainsKey(name) || hash[name] == null) return;
 			List<System.Object> list = hash[name] as List<System.Object>;
-			if (list == null) return units;
+			if (list == null) return;
 
 			foreach (var o in list)
 			{
-				foreach (var i in instances) { var u = i.Parse(o); if (u != null) units.Add(u); }
+				foreach (var i in instances) { var u = i.Parse(o); if (u != null) this.Add(u); }
 			}
-			return units;
+		}
+
+		public Unit Search<T>()
+		{
+			foreach(Unit u in Units)
+			{
+				if (u is T) return u;
+				Unit uu = u.Search<T>();
+				if (uu != null) return uu;
+			}
+			return null;
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Scenario;
+using Scenario.Shooting;
 
 
 public class BaseEnemy : MonoBehaviour

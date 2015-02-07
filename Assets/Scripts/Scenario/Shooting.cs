@@ -5,16 +5,16 @@ using System.ComponentModel;
 using UnityEngine;
 
 
-namespace Scenario
+namespace Scenario.Shooting
 {
 	using Array = List<System.Object>;
 	using Hash = Dictionary<string, System.Object>;
 
 	public enum PositionType { ABSOLUTE, RELATIVE }
 
-	public class ShootingGame : Unit
+	public class Shooting : Unit
 	{
-		public static readonly ShootingGame Instance = new ShootingGame();
+		public static readonly Shooting Instance = new Shooting();
 
 		const string NAME = "ShootingGame";
 		const string TITEL_KEY = "Title";
@@ -34,9 +34,9 @@ namespace Scenario
 			Hash h = o as Hash;
 			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 
-			ShootingGame i = new ShootingGame();
+			Shooting i = new Shooting();
 			i.Title = RetrieveString(h, TITEL_KEY);
-			i.Units = RetrieveUnits(h, UNITS_KEY, Stage.Instance);
+			i.AssignUnits(h, UNITS_KEY, Stage.Instance);
 			return i;
 		}
 
@@ -64,7 +64,7 @@ namespace Scenario
 			
 			var i = new Stage();
 			i.Number = RetrieveInt(h, NUMBER_KEY);
-			i.Units = RetrieveUnits(h, UNITS_KEY, Timeline.Instance);
+			i.AssignUnits(h, UNITS_KEY, Timeline.Instance);
 			return i;
 		}
 
@@ -92,7 +92,7 @@ namespace Scenario
 
 			var i = new Timeline();
 			i.Time = RetrieveFloat(h, SECOND_KEY);
-			i.Units = RetrieveUnits(h, UNITS_KEY, Enemy.Instance);
+			i.AssignUnits(h, UNITS_KEY, Enemy.Instance);
 			return i;
 		}
 
@@ -133,7 +133,7 @@ namespace Scenario
 			i.Breed = RetrieveString(h, BREED_KEY);
 			i.Label = RetrieveString(h, LABEL_KEY);
 			i.Reference = RetrieveString(h, REFERENCE_KEY);
-			i.Units = RetrieveUnits(h, UNITS_KEY, ActMove.Instance, ActFire.Instance);
+			i.AssignUnits(h, UNITS_KEY, ActMove.Instance, ActFire.Instance);
 			return i;
 		}
 

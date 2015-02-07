@@ -4,7 +4,7 @@ using System.Text;
 using Chunker;
 
 
-namespace Scenario
+namespace Scenario.Shooting
 {
 	public class ShootingPlayer
 	{
@@ -12,8 +12,8 @@ namespace Scenario
 
 		LogContainer _Log = LogContainer.Singleton();
 
-		public ShootingGame DocumentBox;
-		public Chunk ResourceBox;
+		public Shooting DocumentBox = new Shooting();
+		public Chunk ResourceBox = new Chunk();
 		private List<Timeline> _Timelines = new List<Timeline>();
 		public int CurrentStage { private set; get; }
 		public float CurrentTime { private set; get; }
@@ -31,7 +31,7 @@ namespace Scenario
 				ResourceBox = c;
 				Chunk d = ResourceBox.Cutout(INDEX_DOCUMENT);
 				Resource r = d.Get(INDEX_DOCUMENT);
-				DocumentBox = ShootingGame.Instance.Parse(r.Body) as ShootingGame;
+				DocumentBox = Shooting.Instance.Parse(r.Body) as Shooting;
 				ChangeStage(0);
 			}
 			catch(Exception ex)

@@ -1,9 +1,8 @@
-﻿*/bin/
-*/obj/
-
+﻿
 *.suo
 *.csproj
 *.sln
 Library/
 Temp/
 obj/
+bin/
