@@ -25,12 +25,20 @@ class GroundHandler : MonoBehaviour
 		_Player.BuildFlow();
 		TextureManager.Singleton().Build(_Player.ResourceBox);
 
+		GameDialog.Instance.OnPressAnywhere += OnPress;
+
 		StartCoroutine(AssigningUnits());
 	}
 
 	IEnumerator AssigningUnits()
 	{
 		yield return 0;
+		_ImagesDialog.Setup(_Player.CurrentImages);
+	}
+
+	public void OnPress()
+	{
+		_Player.Next();
 		_ImagesDialog.Setup(_Player.CurrentImages);
 	}
 }

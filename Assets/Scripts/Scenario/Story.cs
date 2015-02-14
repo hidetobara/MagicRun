@@ -73,7 +73,9 @@ namespace Scenario.Story
 
 		const string NAME = "Cut";
 		const string LABEL_KEY = "Label";
+		public string TIME_KEY = "Time";
 		public string Label { set; get; }
+		public float Time { set; get; }
 
 		public override Unit Parse(System.Object o)
 		{
@@ -82,13 +84,14 @@ namespace Scenario.Story
 
 			var i = new Cut();
 			i.Label = RetrieveString(h, LABEL_KEY);
+			i.Time = RetrieveFloat(h, TIME_KEY);
 			i.AssignUnits(h, UNITS_KEY, Image.Instance, Text.Instance);
 			return i;
 		}
 
 		public override System.Object ToHash()
 		{
-			Hash h = new Hash() { { CLASS_KEY, NAME }, { LABEL_KEY, Label } };
+			Hash h = new Hash() { { CLASS_KEY, NAME }, { LABEL_KEY, Label }, { TIME_KEY, Time } };
 			h[UNITS_KEY] = Units2Hash();
 			return h;
 		}
@@ -110,7 +113,7 @@ namespace Scenario.Story
 
 			var i = new Image();
 			i.Name = RetrieveString(h, NAME_KEY);
-			i.AssignUnits(h, UNITS_KEY, Fix.Instance);
+			i.AssignUnits(h, UNITS_KEY, Fix.Instance, Move.Instance);
 			return i;
 		}
 
@@ -141,7 +144,7 @@ namespace Scenario.Story
 			var i = new Text();
 			i.Speaker = RetrieveString(h, SPEAKER_KEY);
 			i.Message = RetrieveString(h, MESSAGE_KEY);
-			i.AssignUnits(h, UNITS_KEY, Fix.Instance);
+			i.AssignUnits(h, UNITS_KEY, Fix.Instance, Move.Instance);
 			return i;
 		}
 
@@ -159,11 +162,11 @@ namespace Scenario.Story
 		public static readonly Fix Instance = new Fix();
 
 		const string NAME = "Fix";
-		const string ANCHOR_KEY = "Anchor";
+		const string ORIGIN_KEY = "Origin";
 		const string FAR_KEY = "Far";
 		const string WIDTH_KEY = "Width";
 		const string HEIGHT_KEY = "Height";
-		public AnchorType Anchor { set; get; }
+		public AnchorType Origin { set; get; }
 		public FarType Far { set; get; }
 		public float Width { set; get; }
 		public float Height { set; get; }
@@ -174,19 +177,61 @@ namespace Scenario.Story
 			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
 
 			var i = new Fix();
-			i.Anchor = RetrieveEnum<AnchorType>(h, ANCHOR_KEY);
-			i.Far = RetrieveEnum<FarType>(h, FAR_KEY);
-			i.Width = RetrieveFloat(h, WIDTH_KEY);
-			i.Height = RetrieveFloat(h, HEIGHT_KEY);
+			i.ParseFix(h);
 			return i;
+		}
+
+		protected void ParseFix(Hash h)
+		{
+			this.Origin = RetrieveEnum<AnchorType>(h, ORIGIN_KEY);
+			this.Far = RetrieveEnum<FarType>(h, FAR_KEY);
+			this.Width = RetrieveFloat(h, WIDTH_KEY);
+			this.Height = RetrieveFloat(h, HEIGHT_KEY);
 		}
 
 		public override System.Object ToHash()
 		{
-			Hash h = new Hash() { { CLASS_KEY, NAME }, { ANCHOR_KEY, Anchor.ToString() }, { FAR_KEY, Far.ToString() }, { WIDTH_KEY, Width }, { HEIGHT_KEY, Height } };
+			Hash h = new Hash() { { CLASS_KEY, NAME }, { ORIGIN_KEY, Origin.ToString() }, { FAR_KEY, Far.ToString() }, { WIDTH_KEY, Width }, { HEIGHT_KEY, Height } };
 			return h;
 		}
-		public override string ToString() { return "[" + NAME + "]"; }
+		public override string ToString() { return "[" + NAME + "]" + Origin.ToString(); }
 	}
 
+	public class Move : Fix
+	{
+		public static readonly Move Instance = new Move();
+
+		const string NAME = "Move";
+		const string DESTINATION_KEY = "Destination";
+		const string TIME_KEY = "Time";
+		public AnchorType Destination { set; get; }
+		public float Time { set; get; }
+
+		public override Unit Parse(System.Object o)
+		{
+			Hash h = o as Hash;
+			if (h == null || !h.ContainsKey(CLASS_KEY) || h[CLASS_KEY].ToString() != NAME) return null;
+
+			var i = new Move();
+			i.ParseFix(h);
+			i.ParseMove(h);
+			return i;
+		}
+
+		protected void ParseMove(Hash h)
+		{
+			this.Destination = RetrieveEnum<AnchorType>(h, DESTINATION_KEY);
+			this.Time = RetrieveFloat(h, TIME_KEY);
+		}
+
+		public override System.Object ToHash()
+		{
+			Hash h = base.ToHash() as Hash;
+			h[CLASS_KEY] = NAME;
+			h[DESTINATION_KEY] = Destination.ToString();
+			h[TIME_KEY] = Time;
+			return h;
+		}
+		public override string ToString() { return "[" + NAME + "]" + Origin.ToString(); }
+	}
 }

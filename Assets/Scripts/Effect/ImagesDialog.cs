@@ -52,9 +52,12 @@ namespace Scenario
 				Fix fix = image.Search<Fix>() as Fix;
 				if (fix != null)
 				{
-					t.transform.localPosition = Anchor2Vector3(fix.Anchor);
-					t.depth = (int)fix.Far * 10 + (int)fix.Anchor;
+					t.transform.localPosition = Anchor2Vector3(fix.Origin);
+					t.depth = (int)fix.Far * 10 + (int)fix.Origin;
 					ModifyDimenssion(t, fix);
+
+					Move m = fix as Move;
+					if (m != null) StartCoroutine(Moving(t, m));
 				}
 			}
 		}
@@ -86,6 +89,21 @@ namespace Scenario
 				float h = f.Height * _ScreenSize.y;
 				t.SetDimensions((int)w, (int)h);
 			}
+		}
+
+		private IEnumerator Moving(UITexture texture, Move m)
+		{
+			Vector3 o = Anchor2Vector3(m.Origin);
+			Vector3 d = Anchor2Vector3(m.Destination);
+			for(float life = m.Time; life > 0; life -= Time.deltaTime)
+			{
+				float t = 1 - life / m.Time;
+				float theta = (1 - Mathf.Cos(t * Mathf.PI)) / 2.0f;
+				Vector3 p = Vector3.Lerp(o, d, theta);
+				texture.transform.localPosition = p;
+				yield return 0;
+			}
+			texture.transform.localPosition = d;
 		}
 
 		private Vector3 Anchor2Vector3(AnchorType a)

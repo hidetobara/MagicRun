@@ -119,5 +119,11 @@ namespace Scenario
 			}
 			return null;
 		}
+
+		public void RemoveSelf()
+		{
+			if (Parent == null) return;
+			Parent.Units.Remove(this);
+		}
 	}
 }

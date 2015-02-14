@@ -186,6 +186,7 @@ namespace ChunkerManager
 			if(n.Target is Scenario.Story.Image || n.Target is Scenario.Story.Text)
 			{
 				if (sender == ToolStripMenuItemStoryAddFix) { AddTreeUnit(n, new Fix()); }
+				if (sender == ToolStripMenuItemStoryAddMove) { AddTreeUnit(n, new Move()); }
 			}
 		}
 
@@ -204,6 +205,14 @@ namespace ChunkerManager
 			UnitNode n = new UnitNode(unit.ToString(), unit);
 			target.Nodes.Add(n);
 			target.Target.Add(unit);
+		}
+
+		private void removeNodeToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			UnitNode n = TreeViewMain.SelectedNode as UnitNode;
+			if (n == null) return;
+			n.Target.RemoveSelf();
+			n.Remove();
 		}
 	}
 }

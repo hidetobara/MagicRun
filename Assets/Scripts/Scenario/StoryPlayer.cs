@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Chunker;
+using System.Diagnostics;
 
 
 namespace Scenario.Story
@@ -16,9 +17,10 @@ namespace Scenario.Story
 		public Story DocumentBox = new Story();
 		public Chunk ResourceBox = new Chunk();
 
-
+		private Stopwatch _Stopwatch = new Stopwatch();
 		private List<Cut> _FlowCut = new List<Cut>();
 		private int _FlowIndex = 0;
+		private Cut _CurrentCut;
 		public PlayStatus CurrentStatus { get; private set; }
 		public List<Image> CurrentImages { get; private set; }
 		public Text CurrentText { get; private set; }
@@ -91,21 +93,36 @@ namespace Scenario.Story
 		}
 
 		public void Next()
-		{			
-			if (_FlowIndex >= _FlowCut.Count)
+		{
+			try
 			{
-				CurrentStatus = PlayStatus.FINISHED;
-				return;
+				if (_FlowIndex >= _FlowCut.Count)
+				{
+					CurrentStatus = PlayStatus.FINISHED;
+					return;
+				}
+
+				CurrentImages.Clear();
+				CurrentText = null;
+
+				Cut c = _FlowCut[_FlowIndex];
+				if (c.Parent != null) AssignCurrentUnits(c.Parent);
+				AssignCurrentUnits(c);
+				_CurrentCut = c;
+
+				_FlowIndex++;
+				_Stopwatch.Reset();
+				_Stopwatch.Start();
 			}
+			catch(Exception ex)
+			{
+				Print(ex.Message + Environment.NewLine + ex.StackTrace);
+			}
+		}
 
-			CurrentImages.Clear();
-			CurrentText = null;
-
-			Cut c = _FlowCut[_FlowIndex];
-			if (c.Parent != null) AssignCurrentUnits(c.Parent);
-			AssignCurrentUnits(c);
-
-			_FlowIndex++;
+		public bool IsCutOver()
+		{
+			return _CurrentCut != null && _Stopwatch.IsRunning && _CurrentCut.Time < _Stopwatch.ElapsedMilliseconds / 1000.0f;
 		}
 
 		private void AssignCurrentUnits(Unit p)
